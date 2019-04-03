@@ -2,12 +2,19 @@
   "name": "Theme Copy",
   "version": "1.0",
   "description": "Copy a site theme to another site.",
+  "author": "Pinyaporn Eiammongkol",
+  "applications": {
+    "gecko": {
+      "id": "@theme-copy",
+      "strict_min_version": "57.0"
+    }
+  },
   "permissions": ["tabs", "storage",
-    "*://*/*"
+    "<all_urls>"
   ],
   "background": {
     "scripts": ["background.js"],
-    "persistent": false
+    "persistent": true
   },
   "browser_action": {
     "default_popup": "popup.html",
