@@ -5,11 +5,11 @@ let changeColor = document.getElementById("changeColor")
 
 buildColor.onclick = function(element) {
   chrome.tabs.executeScript({
-    file: "build/buildTheme.js"
+    file: "/src/build/buildTheme.js"
   })
 }
 changeColor.onclick = function(element) {
   chrome.tabs.executeScript({
-    file: "build/applyTheme.js"
+    file: "/src/build/applyTheme.js"
   })
 }

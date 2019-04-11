@@ -1,48 +1,6 @@
-async function traverse(node1) {
-  var textColors = {}
-  var bgColors = {}
-
-  const traverse1 = async node => {
-    if (node.nodeType === 1) {
-      // element
-      try {
-        // get color
-        let style = window.getComputedStyle(node)
-        let color = style.getPropertyValue("color")
-        let bgColor = style.getPropertyValue("background-color")
-        let width = node.offsetWidth
-        let height = node.offsetHeight
-        let area = width * height
-        if (isNaN(area)) area = 0
-
-        if (!(color in textColors)) {
-          textColors[color] = 1
-        } else {
-          textColors[color]++
-        }
-        if (!(bgColor in bgColors)) {
-          bgColors[bgColor] = area
-        } else {
-          bgColors[bgColor] += area
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    }
-
-    node.childNodes.forEach(child => {
-      traverse1(child)
-    })
-    return true
-  }
-
-  await traverse1(node1)
-  delete bgColors["rgba(0, 0, 0, 0)"]
-  return {
-    textColors,
-    bgColors
-  }
-}
+import munkres from "munkres-js"
+import colordiff from "color-diff"
+import traverse from "./traverse.js"
 
 var replace = async (node, mapping) => {
   if (node.nodeType === 1) {
@@ -69,41 +27,65 @@ var replace = async (node, mapping) => {
   return true
 }
 
+const convertRgbToLabPreserveWeight = palette => {
+  let results = []
+  for (let key in palette) {
+    const color = key
+    const weight = palette[key]
+    let rgb = color.replace(/[^\d,]/g, "").split(",")
+    let isRgba = rgb.length === 4
+    let lab
+    if (isRgba) {
+      let rgbaObj = { R: rgb[0], G: rgb[1], B: rgb[2], A: rgb[3] }
+      lab = colordiff.rgba_to_lab(rgbaObj)
+    } else {
+      let rgbObj = { R: rgb[0], G: rgb[1], B: rgb[2] }
+      lab = colordiff.rgb_to_lab(rgbObj)
+    }
+    results.push({lab, w: weight})
+  }
+  return results
+}
+
+function distance(a, b) {
+  const labDist = colordiff.diff(a.lab, b.lab) ** 2
+  const wDist = (a.w - b.w) ** 2
+  return Math.sqrt(labDist + wDist)
+}
+
+function createMatrix(target, source) {
+  let matrix = []
+  for (let m of target) {
+    let row = []
+    for (let n of source) {
+      row.push(distance(m, n))
+    }
+    matrix.push(row)
+  }
+  return matrix
+}
+function createMap(target, source) {
+  const targetLabPalette = convertRgbToLabPreserveWeight(target)
+  const sourceLabPalette = convertRgbToLabPreserveWeight(source)
+  const matrix = createMatrix(targetLabPalette, sourceLabPalette)
+  const munkresResult = munkres(matrix)
+}
 async function main() {
   var body = document.body
-
   const { textColors, bgColors } = await traverse(body)
-
-  var sortedTextColors = []
-  var sortedBgColors = []
-  for (let i in textColors) {
-    sortedTextColors.push([i, textColors[i]])
-  }
-  sortedTextColors.sort((a, b) => b[1] - a[1])
-  for (let i in bgColors) {
-    sortedBgColors.push([i, bgColors[i]])
-  }
-  sortedBgColors.sort((a, b) => b[1] - a[1])
 
   var mapping = { text: {}, bg: {} }
   var srcTextColors, srcBgColors
   chrome.storage.sync.get(["textColors", "bgColors"], function(data) {
     srcTextColors = data.textColors
     srcBgColors = data.bgColors
-    console.log("get", srcTextColors)
-    console.log("get", srcBgColors)
-    for (
-      let i = 0;
-      i < sortedTextColors.length && i < srcTextColors.length;
-      i++
-    ) {
-      mapping.text[sortedTextColors[i][0]] = srcTextColors[i][0]
-    }
+    
+    // mapping.text = createMap(srcTextColors, textColors)
+    // mapping.bg = createMap(srcBgColors, bgColors)
+    createMap(srcTextColors, textColors)
+    createMap(srcBgColors, bgColors)
 
-    for (let i = 0; i < sortedBgColors.length && i < srcBgColors.length; i++) {
-      mapping.bg[sortedBgColors[i][0]] = srcBgColors[i][0]
-    }
-    replace(body, mapping)
+    // replace(body, mapping)
   })
 }
 main()

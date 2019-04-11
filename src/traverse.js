@@ -1,6 +1,7 @@
-async function traverse(node) {
-  var textColor = {}
-
+async function traverse(node1) {
+  console.log('traverse')
+  var textColors = {}
+  var bgColors = {}
   const traverse1 = async node => {
     if (node.nodeType === 1) {
       // element
@@ -8,24 +9,53 @@ async function traverse(node) {
         // get color
         let style = window.getComputedStyle(node)
         let color = style.getPropertyValue("color")
-        if (!(color in textColor)) {
-          textColor[color] = 1
+        let bgColor = style.getPropertyValue("background-color")
+        let width = node.offsetWidth
+        let height = node.offsetHeight
+        let area = width * height
+        if (isNaN(area)) area = 0
+
+        if (!(color in textColors)) {
+          textColors[color] = 1
         } else {
-          textColor[color]++
+          textColors[color]++
         }
-      } catch {
-        pass
+        if (!(bgColor in bgColors)) {
+          bgColors[bgColor] = area
+        } else {
+          bgColors[bgColor] += area
+        }
+      } catch (error) {
+        console.error(error)
       }
     }
 
     node.childNodes.forEach(child => {
-      traverse(child)
+      traverse1(child)
     })
     return true
   }
 
-  await traverse1(body)
+  await traverse1(node1)
+  delete bgColors["rgba(0, 0, 0, 0)"]
+  var sumText = 0
+  var sumBg = 0
+  for (let a in textColors) {
+    sumText += textColors[a]
+  }
+  for (let a in bgColors) {
+    sumBg += bgColors[a]
+  }
+  for (let a in textColors) {
+    textColors[a] /= sumText
+  }
+  for (let a in bgColors) {
+    bgColors[a] /= sumBg
+  }
   return {
-    textColor
+    textColors,
+    bgColors
   }
 }
+
+export default traverse

@@ -5,5 +5,9 @@
   "devDependencies": {
     "webpack": "^4.29.6",
     "webpack-cli": "^3.3.0"
+  },
+  "dependencies": {
+    "color-diff": "^1.1.0",
+    "munkres-js": "^1.2.2"
   }
 }
