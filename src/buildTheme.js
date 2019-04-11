@@ -1,3 +1,5 @@
+import { SaySomething } from "./utils/colors.js"
+
 async function traverse(node1) {
   var textColors = {}
   var bgColors = {}
@@ -44,7 +46,8 @@ async function traverse(node1) {
   }
 }
 
-async function main() {
+export default async function main() {
+  SaySomething()
   var body = document.body
   const { textColors, bgColors } = await traverse(body)
 
@@ -62,9 +65,8 @@ async function main() {
   chrome.storage.sync.set(
     { textColors: sortedTextColors, bgColors: sortedBgColors },
     function() {
-      console.log("set", sortedTextColors)
+      console.log("seteeee", sortedTextColors)
       console.log("set", sortedBgColors)
     }
   )
 }
-main()
