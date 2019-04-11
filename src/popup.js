@@ -1,16 +1,15 @@
-"use strict";
-import buildTheme from './buildTheme.js'
+"use strict"
 
-let buildColor = document.getElementById("buildColor");
-let changeColor = document.getElementById("changeColor");
+let buildColor = document.getElementById("buildColor")
+let changeColor = document.getElementById("changeColor")
 
-buildColor.onclick = function (element) {
+buildColor.onclick = function(element) {
   chrome.tabs.executeScript({
-    code: 'buildTheme()'
+    file: "build/buildTheme.js"
   })
-};
+}
 changeColor.onclick = function(element) {
   chrome.tabs.executeScript({
-    file: 'applyTheme.js'
+    file: "build/applyTheme.js"
   })
-};
+}
