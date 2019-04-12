@@ -1,5 +1,5 @@
 async function traverse(node1) {
-  console.log('traverse')
+  console.log("traverse")
   var textColors = {}
   var bgColors = {}
   const traverse1 = async node => {
@@ -38,6 +38,15 @@ async function traverse(node1) {
 
   await traverse1(node1)
   delete bgColors["rgba(0, 0, 0, 0)"]
+
+
+  let texts = Object.entries(textColors)
+  let bgs = Object.entries(bgColors)
+  texts.sort((a, b) => b[1] - a[1])
+  bgs.sort((a, b) => b[1] - a[1])
+  console.log(texts, bgs)
+  const totalText = Object.keys(textColors).length * 100
+  const totalBg = Object.keys(bgColors).length * 100
   var sumText = 0
   var sumBg = 0
   for (let a in textColors) {
@@ -46,11 +55,15 @@ async function traverse(node1) {
   for (let a in bgColors) {
     sumBg += bgColors[a]
   }
+  const multiplier = {
+    text: (1 / sumText) * totalText,
+    bg: (1 / sumBg) * totalBg
+  }
   for (let a in textColors) {
-    textColors[a] /= sumText
+    textColors[a] *= multiplier.text
   }
   for (let a in bgColors) {
-    bgColors[a] /= sumBg
+    bgColors[a] *= multiplier.bg
   }
   return {
     textColors,

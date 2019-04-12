@@ -42,7 +42,7 @@ const convertRgbToLabPreserveWeight = palette => {
       let rgbObj = { R: rgb[0], G: rgb[1], B: rgb[2] }
       lab = colordiff.rgb_to_lab(rgbObj)
     }
-    results.push({lab, w: weight})
+    results.push({lab, w: weight, original: color})
   }
   return results
 }
@@ -53,11 +53,11 @@ function distance(a, b) {
   return Math.sqrt(labDist + wDist)
 }
 
-function createMatrix(target, source) {
+function createMatrix(row, col) {
   let matrix = []
-  for (let m of target) {
+  for (let m of row) {
     let row = []
-    for (let n of source) {
+    for (let n of col) {
       row.push(distance(m, n))
     }
     matrix.push(row)
@@ -65,10 +65,20 @@ function createMatrix(target, source) {
   return matrix
 }
 function createMap(target, source) {
+  console.log('target,source',target, source)
   const targetLabPalette = convertRgbToLabPreserveWeight(target)
   const sourceLabPalette = convertRgbToLabPreserveWeight(source)
-  const matrix = createMatrix(targetLabPalette, sourceLabPalette)
+  const matrix = createMatrix(sourceLabPalette, targetLabPalette)
   const munkresResult = munkres(matrix)
+  console.log('munkresResult', munkresResult)
+  let mapping = {}
+  for (let tuple of munkresResult) {
+    let sid = tuple[0]
+    let tid = tuple[1]
+    mapping[sourceLabPalette[sid].original] = targetLabPalette[tid].original 
+  }
+  console.log('mapping', mapping)
+  return mapping
 }
 async function main() {
   var body = document.body
@@ -82,10 +92,10 @@ async function main() {
     
     // mapping.text = createMap(srcTextColors, textColors)
     // mapping.bg = createMap(srcBgColors, bgColors)
-    createMap(srcTextColors, textColors)
-    createMap(srcBgColors, bgColors)
+    mapping.text = createMap(srcTextColors, textColors)
+    mapping.bg = createMap(srcBgColors, bgColors)
 
-    // replace(body, mapping)
+    replace(body, mapping)
   })
 }
 main()
