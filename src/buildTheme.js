@@ -7,8 +7,8 @@ export default async function main() {
   chrome.storage.sync.set(
     { textColors, bgColors },
     function() {
-      console.log("SET textColors", textColors)
-      console.log("SET bgColors", bgColors)
+      console.log("SET textColors")
+      console.log("SET bgColors")
     }
   )
 }

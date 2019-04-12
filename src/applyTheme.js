@@ -1,6 +1,7 @@
 import munkres from "munkres-js"
 import colordiff from "color-diff"
 import traverse from "./traverse.js"
+import Palette from "./utils/Palette.js";
 
 var replace = async (node, mapping) => {
   if (node.nodeType === 1) {
@@ -65,12 +66,12 @@ function createMatrix(row, col) {
   return matrix
 }
 function createMap(target, source) {
-  console.log('target,source',target, source)
+  // console.log('target,source',target, source)
   const targetLabPalette = convertRgbToLabPreserveWeight(target)
   const sourceLabPalette = convertRgbToLabPreserveWeight(source)
   const matrix = createMatrix(sourceLabPalette, targetLabPalette)
   const munkresResult = munkres(matrix)
-  console.log('munkresResult', munkresResult)
+  // console.log('munkresResult', munkresResult)
   let mapping = {}
   for (let tuple of munkresResult) {
     let sid = tuple[0]
@@ -83,15 +84,14 @@ function createMap(target, source) {
 async function main() {
   var body = document.body
   const { textColors, bgColors } = await traverse(body)
-
+  const palette = new Palette(Object.keys(textColors))
+  palette.createFinestSegmentation()
   var mapping = { text: {}, bg: {} }
   var srcTextColors, srcBgColors
   chrome.storage.sync.get(["textColors", "bgColors"], function(data) {
     srcTextColors = data.textColors
     srcBgColors = data.bgColors
-    
-    // mapping.text = createMap(srcTextColors, textColors)
-    // mapping.bg = createMap(srcBgColors, bgColors)
+
     mapping.text = createMap(srcTextColors, textColors)
     mapping.bg = createMap(srcBgColors, bgColors)
 
