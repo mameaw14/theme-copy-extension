@@ -1744,13 +1744,6 @@ nice-try@^1.0.4:
   resolved "https://registry.yarnpkg.com/nice-try/-/nice-try-1.0.5.tgz#a3378a7696ce7d223e88fc9b764bd7ef1089e366"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
 
-node-kmeans@^1.1.8:
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/node-kmeans/-/node-kmeans-1.1.8.tgz#abfc87d18fa3c473470bf0e6b6d683eec5446c92"
-  integrity sha512-ECRohwrZzZMbvbGhlnALCozmMub1MuJJQEAFRoWiirR8WhcWXMmsmfCiEv+PcytFTt8E6TIgFMDPE6de2RTApQ==
-  dependencies:
-    underscore "1.4.2"
-
 node-libs-browser@^2.0.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/node-libs-browser/-/node-libs-browser-2.2.0.tgz#c72f60d9d46de08a940dedbb25f3ffa2f9bbaa77"
@@ -2637,10 +2630,10 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-underscore@1.4.2:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.4.2.tgz#cb2aae6a7999a89fd55aaee75bce0311698cebfb"
-  integrity sha1-yyquanmZqJ/VWq7nW84DEWmM6/s=
+underscore@^1.9.1:
+  version "1.9.1"
+  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.9.1.tgz#06dce34a0e68a7babc29b365b8e74b8925203961"
+  integrity sha512-5/4etnCkd9c8gwgowi5/om/mYO5ajCaOgdzj/oW+0eQV9WxKBDZw5+ycmKmeaTXjInS/W0BzpGLo2xR2aBwZdg==
 
 union-value@^1.0.0:
   version "1.0.0"

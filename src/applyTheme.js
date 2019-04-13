@@ -1,7 +1,7 @@
 import munkres from "munkres-js"
 import colordiff from "color-diff"
 import traverse from "./traverse.js"
-import Palette from "./utils/Palette.js";
+import Palette from "./utils/Palette.js"
 
 var replace = async (node, mapping) => {
   if (node.nodeType === 1) {
@@ -43,7 +43,7 @@ const convertRgbToLabPreserveWeight = palette => {
       let rgbObj = { R: rgb[0], G: rgb[1], B: rgb[2] }
       lab = colordiff.rgb_to_lab(rgbObj)
     }
-    results.push({lab, w: weight, original: color})
+    results.push({ lab, w: weight, original: color })
   }
   return results
 }
@@ -76,26 +76,41 @@ function createMap(target, source) {
   for (let tuple of munkresResult) {
     let sid = tuple[0]
     let tid = tuple[1]
-    mapping[sourceLabPalette[sid].original] = targetLabPalette[tid].original 
+    mapping[sourceLabPalette[sid].original] = targetLabPalette[tid].original
   }
-  console.log('mapping', mapping)
+  console.log("mapping", mapping)
   return mapping
 }
 async function main() {
   var body = document.body
+  let properties = ["text", "bg"]
   const { textColors, bgColors } = await traverse(body)
-  const palette = new Palette(Object.keys(textColors))
-  palette.createFinestSegmentation()
+  const s = { text: textColors, bg: bgColors }
   var mapping = { text: {}, bg: {} }
-  var srcTextColors, srcBgColors
+
   chrome.storage.sync.get(["textColors", "bgColors"], function(data) {
-    srcTextColors = data.textColors
-    srcBgColors = data.bgColors
+    const t = { text: data.textColors, bg: data.bgColors }
 
-    mapping.text = createMap(srcTextColors, textColors)
-    mapping.bg = createMap(srcBgColors, bgColors)
+    // t: copied, s: to paste
+    const palettes = {}
+    for (let p of properties) {
+      palettes[p] = {
+        s: new Palette(s[p]),
+        t: new Palette(t[p])
+      }
+    }
+    for (let p in palettes) {
+      const { t, s } = palettes[p]
+      if (s.length < t.length) {
+        const k = s.length
+        const kmeansResult = t.clustering(k)
+        console.log('kmean result')
+      }
+    }
+    // mapping.text = createMap(srcTextColors, textColors)
+    // mapping.bg = createMap(srcBgColors, bgColors)
 
-    replace(body, mapping)
+    // replace(body, mapping)
   })
 }
 main()

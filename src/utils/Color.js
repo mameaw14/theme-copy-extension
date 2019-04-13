@@ -1,7 +1,8 @@
 import colordiff from "color-diff"
 
 export default class Color {
-  constructor(rgbString) {
+  constructor(rgbString, weight = 0) {
+    this.weight = weight
     let rgb = rgbString.replace(/[^\d,]/g, "").split(",")
     let isRgba = rgb.length === 4
     this.rgba = isRgba
@@ -9,7 +10,6 @@ export default class Color {
       : { R: rgb[0], G: rgb[1], B: rgb[2], A: 1 }
   }
   static distance(a, b) {
-    console.log(a,b)
     return colordiff.diff(
       { L: a[0], a: a[1], b: a[2] },
       { L: b[0], a: b[1], b: b[2] }

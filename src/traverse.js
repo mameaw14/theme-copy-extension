@@ -44,7 +44,6 @@ async function traverse(node1) {
   let bgs = Object.entries(bgColors)
   texts.sort((a, b) => b[1] - a[1])
   bgs.sort((a, b) => b[1] - a[1])
-  console.log(texts, bgs)
   const totalText = Object.keys(textColors).length * 100
   const totalBg = Object.keys(bgColors).length * 100
   var sumText = 0

@@ -1,13 +1,16 @@
 import Color from "./Color"
-import kmeans from "node-kmeans"
+import kmeans from "./kmeans"
 
 export default class Palette {
   constructor(colors) {
     this.colors = []
-    for (let color of colors) {
-      this.colors.push(new Color(color))
+    for (let color in colors) {
+      this.colors.push(new Color(color, colors[color]))
     }
     console.log(`Created a palette with ${this.colors.length} colors`)
+  }
+  get length() {
+    return this.colors.length
   }
   get hueHistogram() {
     if (this._hueHistogram) return this._hueHistogram
@@ -71,7 +74,8 @@ export default class Palette {
     for (let i = 0; i < colors.length; i++) {
       vectors[i] = Object.values(colors[i].lab)
     }
-    return kmeans.clusterize(
+    console.log('vector in clustering', vectors)
+    kmeans.clusterize(
       vectors,
       { k: n, distance: Color.distance },
       (err, res) => {
