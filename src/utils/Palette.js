@@ -7,6 +7,7 @@ export default class Palette {
     for (let color in colors) {
       this.colors.push(new Color(color, colors[color]))
     }
+    this.colors.sort((a, b) => b.weight - a.weight)
     console.log(`Created a palette with ${this.colors.length} colors`)
   }
   get length() {
@@ -74,7 +75,7 @@ export default class Palette {
     for (let i = 0; i < colors.length; i++) {
       vectors[i] = Object.values(colors[i].lab)
     }
-    console.log('vector in clustering', vectors)
+    console.log("colors in clustering", colors)
     kmeans.clusterize(
       vectors,
       { k: n, distance: Color.distance },
