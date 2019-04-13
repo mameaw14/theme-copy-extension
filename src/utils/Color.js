@@ -3,6 +3,7 @@ import colordiff from "color-diff"
 export default class Color {
   constructor(rgbString, weight = 0) {
     this.weight = weight
+    this.original = rgbString
     let rgb = rgbString.replace(/[^\d,.]/g, "").split(",")
     let isRgba = rgb.length === 4
     this.rgba = isRgba

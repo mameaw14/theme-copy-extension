@@ -236,7 +236,16 @@ class Clusterize {
 }
 
 exports.clusterize = (vector, options, callback) => {
-  return new Clusterize(vector, options, callback)
+  return new Promise((resolve, reject) => {
+    new Clusterize(vector, options, (err, data) => {
+      callback(err, data)
+      if (err != null) {
+        return reject(err)
+      } else {
+        return resolve(data)
+      }
+    })
+  })
 }
 
 exports._class = Clusterize

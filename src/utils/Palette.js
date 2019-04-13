@@ -3,14 +3,11 @@ import kmeans from "./kmeans"
 
 export default class Palette {
   constructor(colors) {
-    if(Array.isArray(colors)) {
-      this.colors = colors
-      return
-    }
     this.colors = []
     for (let color in colors) {
       this.colors.push(new Color(color, colors[color]))
     }
+
     this.colors.sort((a, b) => b.weight - a.weight)
     console.log(`Created a palette with ${this.colors.length} colors`)
   }
@@ -79,8 +76,8 @@ export default class Palette {
     for (let i = 0; i < colors.length; i++) {
       vectors[i] = Object.values(colors[i].lab)
     }
-    console.log("colors in clustering", colors)
-    const results = []
+    console.log("CLUSTERING", colors)
+    const results = {}
     await kmeans.clusterize(
       vectors,
       { k: n, distance: Color.distance },
@@ -88,9 +85,11 @@ export default class Palette {
         if (err) console.error(err)
         else {
           for (let cluster of res) {
-            results.push(colors[cluster.clusterInd[0]])
+            results[colors[cluster.clusterInd[0]].original] =
+              colors[cluster.clusterInd[0]].weight
           }
         }
+        console.log("CLUSTERRING RESULTS", results)
       }
     )
     return results
