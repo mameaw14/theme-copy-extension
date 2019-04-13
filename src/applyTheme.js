@@ -88,7 +88,7 @@ async function main() {
   const s = { text: textColors, bg: bgColors }
   var mapping = { text: {}, bg: {} }
 
-  chrome.storage.sync.get(["textColors", "bgColors"], function(data) {
+  chrome.storage.sync.get(["textColors", "bgColors"], async function(data) {
     const t = { text: data.textColors, bg: data.bgColors }
 
     // t: copied, s: to paste
@@ -100,11 +100,12 @@ async function main() {
       }
     }
     for (let p in palettes) {
-      const { t, s } = palettes[p]
+      let { t, s } = palettes[p]
       if (s.length < t.length) {
         const k = s.length
-        const kmeansResult = t.clustering(k)
-        console.log('kmean result')
+        const newColor = await t.getNColors(k)
+        t = new Palette(newColor)
+        console.log('new Palette', t)
       }
     }
     // mapping.text = createMap(srcTextColors, textColors)
