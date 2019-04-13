@@ -1,4 +1,5 @@
 import Color from "./Color"
+import kmeans from "node-kmeans"
 
 export default class Palette {
   constructor(colors) {
@@ -62,5 +63,21 @@ export default class Palette {
   createFinestSegmentation() {
     const localMinima = this.findLocalMinima()
     console.log(localMinima.length, localMinima)
+  }
+
+  clustering(n = 5) {
+    const vectors = []
+    const { colors } = this
+    for (let i = 0; i < colors.length; i++) {
+      vectors[i] = Object.values(colors[i].lab)
+    }
+    return kmeans.clusterize(
+      vectors,
+      { k: n, distance: Color.distance },
+      (err, res) => {
+        if (err) console.error(err)
+        else console.log("%o", res)
+      }
+    )
   }
 }

@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "color-diff": "^1.1.0",
-    "munkres-js": "^1.2.2"
+    "munkres-js": "^1.2.2",
+    "node-kmeans": "^1.1.8"
   }
 }
