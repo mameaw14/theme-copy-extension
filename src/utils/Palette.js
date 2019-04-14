@@ -70,28 +70,42 @@ export default class Palette {
     console.log(localMinima.length, localMinima)
   }
 
-  async getNColors(n = 5) {
+  async clustering(k = 5) {
     const vectors = []
     const { colors } = this
     for (let i = 0; i < colors.length; i++) {
       vectors[i] = Object.values(colors[i].lab)
     }
     console.log("CLUSTERING", colors)
-    const results = {}
+    let results
     await kmeans.clusterize(
       vectors,
-      { k: n, distance: Color.distance },
+      { k, distance: Color.distance },
       (err, res) => {
         if (err) console.error(err)
-        else {
-          for (let cluster of res) {
-            results[colors[cluster.clusterInd[0]].original] =
-              colors[cluster.clusterInd[0]].weight
-          }
-        }
-        console.log("CLUSTERRING RESULTS", results)
+        else results = res
       }
     )
     return results
+  }
+  async getNColors(n = 5) {
+    const { colors } = this
+    const clusteringResults = await this.clustering(n)
+    const results = {}
+    for (let cluster of clusteringResults) {
+      results[colors[cluster.clusterInd[0]].original] =
+        colors[cluster.clusterInd[0]].weight
+    }
+    return results
+  }
+  async getNColorsAndClusteringResults(n = 5) {
+    const { colors } = this
+    const clusteringResults = await this.clustering(n)
+    const results = {}
+    for (let cluster of clusteringResults) {
+      results[colors[cluster.clusterInd[0]].original] =
+        colors[cluster.clusterInd[0]].weight
+    }
+    return { clusters: clusteringResults, results }
   }
 }

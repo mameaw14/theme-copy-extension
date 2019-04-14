@@ -2,7 +2,8 @@ import munkres from "munkres-js"
 import colordiff from "color-diff"
 import traverse from "./traverse.js"
 import Palette from "./utils/Palette.js"
-import mappingPalette from "./utils/mapping.js";
+import mappingPalette from "./utils/mapping.js"
+import Color from "./utils/Color.js"
 
 var replace = async (node, mapping) => {
   if (node.nodeType === 1) {
@@ -51,10 +52,44 @@ async function main() {
       let { t, s } = palettes[p]
       if (s.length < t.length) {
         const k = s.length
-        const newColor = await t.getNColors(k)
-        t = new Palette(newColor)
+        const newColors = await t.getNColors(k)
+        t = new Palette(newColors)
+        mapping[p] = mappingPalette(s, t)
+      } else if (s.length > t.length) {
+        const k = t.length
+        const {
+          clusters,
+          results: newColors
+        } = await s.getNColorsAndClusteringResults(k)
+        const sPrime = new Palette(newColors)
+        const _mapping = mappingPalette(sPrime, t)
+        for (let cluster of clusters) {
+          const representId = cluster.clusterInd[0]
+          const sourceColor = s.colors[representId]
+          const representKey = sourceColor.original
+          console.log(mapping)
+          const targetColor = new Color(_mapping[representKey])
+
+          for (let i = 1; i < cluster.clusterInd.length; i++) {
+            const id = cluster.clusterInd[i]
+            const color = s.colors[id]
+            let newLuminance =
+              targetColor.lab.L + (sourceColor.lab.L - color.lab.L)
+            if (newLuminance < 0) newLuminance = 0
+            if (newLuminance > 100) newLuminance = 100
+            const newColorString = Color.lab_to_rgbstr({
+              L: newLuminance,
+              a: targetColor.lab.a,
+              b: targetColor.lab.b
+            })
+            _mapping[color.original] = newColorString
+          }
+        }
+        mapping[p] = _mapping
+      } else {
+        mapping[p] = mappingPalette(s, t)
       }
-      mapping[p] = mappingPalette(t, s)
+      console.log("MAP", p, mapping[p])
     }
     replace(body, mapping)
   })

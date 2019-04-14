@@ -18,7 +18,7 @@ function createMatrix(row, col) {
   }
   return matrix
 }
-function mappingPalette(target, source) {
+function mappingPalette(source, target) {
   const targetColors = target.colors
   const sourceColors = source.colors
   const matrix = createMatrix(sourceColors, targetColors)
