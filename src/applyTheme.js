@@ -51,10 +51,8 @@ async function main() {
       let { t, s } = palettes[p]
       if (s.length < t.length) {
         const k = s.length
-        console.log("BEFORE CALL CLUSTERING")
         const newColor = await t.getNColors(k)
         t = new Palette(newColor)
-        console.log("CREATED NEW PALETTE", t)
       }
       mapping[p] = mappingPalette(t, s)
     }
