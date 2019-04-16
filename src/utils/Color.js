@@ -1,20 +1,21 @@
 import colordiff from "color-diff"
+import tinycolor from "tinycolor2"
 import _ from "underscore"
-export default class Color {
-  constructor(rgbString, weight = 0) {
-    this.weight = weight
-    if (_.isObject(rgbString)) {
-      this.rgba = rgbString
-      if (!("A" in this.rgba)) this.rgba.A = 1
-      this.original = this.constructor.rgba_to_string(this.rgba)
+
+export default class Color extends tinycolor {
+  constructor(input, weight = 0) {
+    super(input)
+    if (_.isObject(input)) {
+      this.rgba = { R: input.r, G: input.G, B: input.B }
+      if (!("a" in this.rgba)) this.rgba.A = 1
     } else {
-      this.original = rgbString
-      let rgb = rgbString.replace(/[^\d,.]/g, "").split(",")
+      let rgb = input.replace(/[^\d,.]/g, "").split(",")
       let isRgba = rgb.length === 4
       this.rgba = isRgba
         ? { R: rgb[0], G: rgb[1], B: rgb[2], A: rgb[3] }
         : { R: rgb[0], G: rgb[1], B: rgb[2], A: 1 }
     }
+    this.weight = weight
   }
   static distance(a, b) {
     return colordiff.diff(
@@ -57,151 +58,22 @@ export default class Color {
       B: Math.max(0, Math.min(1, b)) * 255
     }
   }
+  get original() {
+    return this.getOriginalInput()
+  }
   get luminance() {
-    // https://github.com/LeaVerou/contrast-ratio/blob/gh-pages/color.js
-    // Formula: http://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
-    const _rgba = this.rgba
-    const rgba = [_rgba.R, _rgba.G, _rgba.B]
-    for (let i = 0; i < 3; i++) {
-      let rgb = rgba[i]
-
-      rgb /= 255
-
-      rgb = rgb < 0.03928 ? rgb / 12.92 : Math.pow((rgb + 0.055) / 1.055, 2.4)
-
-      rgba[i] = rgb
-    }
-
-    return 0.2126 * rgba[0] + 0.7152 * rgba[1] + 0.0722 * rgba[2]
+    return this.getLuminance()
   }
-
-  overlayOn(color) {
-    // https://github.com/LeaVerou/contrast-ratio/blob/gh-pages/color.js
-    let overlaid = this.rgba
-
-    var alpha = this.rgba.A
-
-    if (alpha >= 1) {
-      return overlaid
-    }
-
-    for (let i of ["R", "G", "B"]) {
-      overlaid[i] =
-        overlaid[i] * alpha + color.rgba[i] * color.rgba.A * (1 - alpha)
-    }
-
-    overlaid.A = alpha + color.rgba.A * (1 - alpha)
-
-    return new Color(overlaid)
+  get hsl() {
+    return this.toHsl()
   }
-
-  contrast(color) {
-    // https://github.com/LeaVerou/contrast-ratio/blob/gh-pages/color.js
-    // Formula: http://www.w3.org/TR/2008/REC-WCAG20-20081211/#contrast-ratiodef
-    let alpha = this.rgba.A
-
-    if (alpha >= 1) {
-      if (color.rgba.A < 1) {
-        color = color.overlayOn(this)
-      }
-
-      var l1 = this.luminance + 0.05,
-        l2 = color.luminance + 0.05,
-        ratio = l1 / l2
-
-      if (l2 > l1) {
-        ratio = 1 / ratio
-      }
-
-      return {
-        ratio: ratio,
-        error: 0,
-        min: ratio,
-        max: ratio
-      }
-    }
-
-    // If we’re here, it means we have a semi-transparent background
-    // The text color may or may not be semi-transparent, but that doesn't matter
-
-    var onBlack = this.overlayOn(_BLACK),
-      onWhite = this.overlayOn(_WHITE),
-      contrastOnBlack = onBlack.contrast(color).ratio,
-      contrastOnWhite = onWhite.contrast(color).ratio
-
-    var max = Math.max(contrastOnBlack, contrastOnWhite)
-
-    // This is here for backwards compatibility and not used to calculate
-    // `min`.  Note that there may be other colors with a closer luminance to
-    // `color` if they have a different hue than `this`.
-    var closest = {
-      R: Math.min(
-        Math.max(0, (color.rgba.R - this.rgba.R * alpha) / (1 - alpha)),
-        255
-      ),
-      G: Math.min(
-        Math.max(0, (color.rgba.G - this.rgba.G * alpha) / (1 - alpha)),
-        255
-      ),
-      B: Math.min(
-        Math.max(0, (color.rgba.B - this.rgba.B * alpha) / (1 - alpha)),
-        255
-      )
-    }
-
-    closest = new Color(closest)
-
-    var min = 1
-    if (onBlack.luminance > color.luminance) {
-      min = contrastOnBlack
-    } else if (onWhite.luminance < color.luminance) {
-      min = contrastOnWhite
-    }
-
-    return {
-      ratio: floor((min + max) / 2, 2),
-      error: floor((max - min) / 2, 2),
-      min: min,
-      max: max,
-      closest: closest,
-      farthest: onWhite == max ? _.WHITE : _.BLACK
-    }
-  }
-
   get lab() {
-    if (this._lab) return this._lab
-    this._lab = colordiff.rgba_to_lab(this.rgba)
-    return this._lab
+    return colordiff.rgba_to_lab(this.rgba)
   }
   get hue() {
-    // https://github.com/brehaut/color-js/blob/master/color.js
-    if (this._hue) {
-      return this._hue
-    }
-    const { R, G, B } = this.rgba
-    let min, max, delta, hue
-
-    min = Math.min(R, G, B)
-    max = Math.max(R, G, B)
-    delta = max - min
-
-    if (delta == 0) {
-      hue = 0
-    } else {
-      if (R == max) {
-        hue = (G - B) / delta
-      } else if (G == max) {
-        hue = 2 + (B - R) / delta
-      } else {
-        hue = 4 + (R - G) / delta
-      }
-      hue = (hue * 60 + 360) % 360
-    }
-    this._hue = hue
-    return this._hue
+    return this.hsl.h
+  }
+  contrast(color) {
+    return tinycolor.readability(this, color)
   }
 }
-
-
-const _BLACK = new Color({ R: 0, B: 0, G: 0 })
-const _WHITE = new Color({ R: 255, B: 255, G: 255 })

@@ -14,6 +14,7 @@
   "dependencies": {
     "color-diff": "^1.1.0",
     "munkres-js": "^1.2.2",
+    "tinycolor2": "^1.4.1",
     "underscore": "^1.9.1"
   }
 }
