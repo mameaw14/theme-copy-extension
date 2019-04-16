@@ -1,14 +1,12 @@
 import colordiff from "color-diff"
 import _ from "underscore"
-const _BLACK = new Color({ R: 0, B: 0, G: 0 })
-const _WHITE = new Color({ R: 255, B: 255, G: 255 })
 export default class Color {
   constructor(rgbString, weight = 0) {
     this.weight = weight
     if (_.isObject(rgbString)) {
       this.rgba = rgbString
       if (!("A" in this.rgba)) this.rgba.A = 1
-      this.original = this.rgba_to_string(this.rgba)
+      this.original = this.constructor.rgba_to_string(this.rgba)
     } else {
       this.original = rgbString
       let rgb = rgbString.replace(/[^\d,.]/g, "").split(",")
@@ -32,6 +30,8 @@ export default class Color {
     return A === 1 ? `rgb(${R}, ${G}, ${B})` : `rgba(${R}, ${G}, ${B}, ${A})`
   }
   static lab_to_rgb(lab) {
+    // https://github.com/antimatter15/rgb-lab/blob/master/color.js
+
     let y = (lab.L + 16) / 116,
       x = lab.a / 500 + y,
       z = y - lab.b / 200,
@@ -58,6 +58,7 @@ export default class Color {
     }
   }
   get luminance() {
+    // https://github.com/LeaVerou/contrast-ratio/blob/gh-pages/color.js
     // Formula: http://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
     const _rgba = this.rgba
     const rgba = [_rgba.R, _rgba.G, _rgba.B]
@@ -75,6 +76,7 @@ export default class Color {
   }
 
   overlayOn(color) {
+    // https://github.com/LeaVerou/contrast-ratio/blob/gh-pages/color.js
     let overlaid = this.rgba
 
     var alpha = this.rgba.A
@@ -94,6 +96,7 @@ export default class Color {
   }
 
   contrast(color) {
+    // https://github.com/LeaVerou/contrast-ratio/blob/gh-pages/color.js
     // Formula: http://www.w3.org/TR/2008/REC-WCAG20-20081211/#contrast-ratiodef
     let alpha = this.rgba.A
 
@@ -109,8 +112,6 @@ export default class Color {
       if (l2 > l1) {
         ratio = 1 / ratio
       }
-
-      ratio = floor(ratio, 2)
 
       return {
         ratio: ratio,
@@ -173,6 +174,7 @@ export default class Color {
     return this._lab
   }
   get hue() {
+    // https://github.com/brehaut/color-js/blob/master/color.js
     if (this._hue) {
       return this._hue
     }
@@ -199,3 +201,7 @@ export default class Color {
     return this._hue
   }
 }
+
+
+const _BLACK = new Color({ R: 0, B: 0, G: 0 })
+const _WHITE = new Color({ R: 255, B: 255, G: 255 })
