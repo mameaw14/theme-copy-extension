@@ -1,6 +1,9 @@
 import Color from "./Color"
 import kmeans from "./kmeans"
 
+const WHITE = new Color("white")
+const BLACK = new Color("black")
+
 export default class Palette {
   constructor(colors) {
     this.colors = []
@@ -74,9 +77,14 @@ export default class Palette {
     const vectors = []
     const { colors } = this
     for (let i = 0; i < colors.length; i++) {
-      vectors[i] = Object.values(colors[i].lab)
+      if (colors[i].getAlpha() < 1) {
+        const overlayBg = Color.equals(colors[i].clone().setAlpha(1), WHITE) ? BLACK : WHITE
+        const newColor = Color.mix(colors[i], overlayBg)
+        vectors[i] = Object.values(newColor.lab)
+      } else {
+        vectors[i] = Object.values(colors[i].lab)
+      }
     }
-    console.log("CLUSTERING", colors)
     let results
     await kmeans.clusterize(
       vectors,

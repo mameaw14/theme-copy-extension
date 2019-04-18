@@ -5,17 +5,33 @@ import _ from "underscore"
 export default class Color extends tinycolor {
   constructor(input, weight = 0) {
     super(input)
-    if (_.isObject(input)) {
-      this.rgba = { R: input.r, G: input.G, B: input.B }
-      if (!("a" in this.rgba)) this.rgba.A = 1
-    } else {
-      let rgb = input.replace(/[^\d,.]/g, "").split(",")
-      let isRgba = rgb.length === 4
-      this.rgba = isRgba
-        ? { R: rgb[0], G: rgb[1], B: rgb[2], A: rgb[3] }
-        : { R: rgb[0], G: rgb[1], B: rgb[2], A: 1 }
-    }
     this.weight = weight
+  }
+  static isContrastOK(a, b) {
+    return tinycolor.isReadable(a, b)
+  }
+  static getCompatibleTextColor(toChange, toKeep) {
+    const STEP = 10
+    let makeItLight = toKeep.isDark()
+    let newColor = toChange.lighten(50)
+    while (!Color.isContrastOK(newColor, toKeep)) {
+      const con = newColor.contrast(toKeep)
+      if (makeItLight) {
+        newColor = newColor.brighten(STEP)
+      } else {
+        newColor = newColor.darken(STEP)
+      }
+      if (
+        tinycolor.equals(newColor, "white") ||
+        tinycolor.equals(newColor, "black")
+      ) {
+        const whiteTxtLmn = toKeep.contrast("white")
+        const blackTxtLmn = toKeep.contrast("black")
+        if (whiteTxtLmn > blackTxtLmn) return new Color("white")
+        return new Color("black")
+      }
+    }
+    return newColor
   }
   static distance(a, b) {
     return colordiff.diff(
@@ -57,6 +73,14 @@ export default class Color extends tinycolor {
       G: Math.max(0, Math.min(1, g)) * 255,
       B: Math.max(0, Math.min(1, b)) * 255
     }
+  }
+  static mix(color1, color2) {
+    const n = new Color(tinycolor.mix(color1, color2).toRgb())
+    return n
+  }
+  get rgba() {
+    const rgb = this.toRgb()
+    return { R: rgb.r, G: rgb.g, B: rgb.b, A: rgb.a }
   }
   get original() {
     return this.getOriginalInput()

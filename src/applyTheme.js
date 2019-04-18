@@ -5,7 +5,10 @@ import Palette from "./utils/Palette.js"
 import mappingPalette from "./utils/mapping.js"
 import Color from "./utils/Color.js"
 
-var replace = async (node, mapping) => {
+function addCssText(node, property, value) {
+  node.style.cssText += `;${property}: ${value} !important`
+}
+async function replace(node, mapping, nearlestBgColor = "white") {
   if (node.nodeType === 1) {
     // element
     try {
@@ -13,11 +16,25 @@ var replace = async (node, mapping) => {
       let color = style.getPropertyValue("color")
       let bgColor = style.getPropertyValue("background-color")
 
-      if (color in mapping.text) {
-        node.style.color = mapping.text[color]
-      }
       if (bgColor in mapping.bg) {
-        node.style.backgroundColor = mapping.bg[bgColor]
+        addCssText(node, "background-color", mapping.bg[bgColor])
+        nearlestBgColor = mapping.bg[bgColor]
+      }
+
+      let fg =
+        color in mapping.text
+          ? new Color(mapping.text[color])
+          : new Color(color)
+
+      const bg = new Color(nearlestBgColor)
+      if (!Color.isContrastOK(fg, bg)) {
+        addCssText(
+          node,
+          "color",
+          Color.getCompatibleTextColor(fg, bg).toRgbString()
+        )
+      } else {
+        addCssText(node, "color", mapping.text[color])
       }
     } catch (error) {
       console.log(error)
@@ -25,7 +42,7 @@ var replace = async (node, mapping) => {
   }
 
   node.childNodes.forEach(child => {
-    replace(child, mapping)
+    replace(child, mapping, nearlestBgColor)
   })
   return true
 }
@@ -67,7 +84,6 @@ async function main() {
           const representId = cluster.clusterInd[0]
           const sourceColor = s.colors[representId]
           const representKey = sourceColor.original
-          console.log(mapping)
           const targetColor = new Color(_mapping[representKey])
 
           for (let i = 1; i < cluster.clusterInd.length; i++) {
@@ -92,6 +108,7 @@ async function main() {
       console.log("MAP", p, mapping[p])
     }
     replace(body, mapping)
+    console.log("REPLACED")
   })
 }
 main()
