@@ -15,13 +15,13 @@ function addCssText(node, property, value) {
   node.style.cssText += `;${property}: ${value} !important`
 }
 async function replaceRules(mapping) {
-  let i = 1
   const styleSheets = Object.values(document.styleSheets)
-  for (let sheet of styleSheets) {
+  for (let i = 0; i < styleSheets.length; i++) {
     try {
+      const sheet = styleSheets[i]
       const rules = await getRules(sheet)
-      console.log("GET RULES", i++)
-      console.log(sheet)
+      // console.log("RULES", i)
+      // console.log("LENGTH", styleSheets.length)
       for (let rule of rules) {
         if (!("style" in rule)) continue
         let color = rule.style.color
@@ -51,9 +51,16 @@ async function replaceRules(mapping) {
   }
   return
 }
-async function adjustTextContrast(node, mapping, nearlestBgColor = "white") {
+async function adjustTextContrast(
+  node,
+  mapping,
+  nearlestBgColor = "white",
+  n = 1
+) {
+  if (n === 20) return false
   if (node.nodeType === 1) {
     // element
+    // console.log(node)
     try {
       let style = window.getComputedStyle(node)
       let color = style.getPropertyValue("color")
@@ -77,7 +84,7 @@ async function adjustTextContrast(node, mapping, nearlestBgColor = "white") {
   }
 
   node.childNodes.forEach(child => {
-    adjustTextContrast(child, mapping, nearlestBgColor)
+    adjustTextContrast(child, mapping, nearlestBgColor, n + 1)
   })
   return true
 }
@@ -111,7 +118,7 @@ async function main() {
           const k = s.length
           const newColors = await t.getNColors(k)
           t = new Palette(newColors)
-          mapping[p] = mappingPalette(s, t)
+          mapping[p] = await mappingPalette(s, t)
         } else if (s.length > t.length) {
           const k = t.length
           const {
@@ -119,7 +126,7 @@ async function main() {
             results: newColors
           } = await s.getNColorsAndClusteringResults(k)
           const sPrime = new Palette(newColors)
-          const _mapping = mappingPalette(sPrime, t)
+          const _mapping = await mappingPalette(sPrime, t)
           for (let cluster of clusters) {
             const representId = cluster.clusterInd[0]
             const sourceColor = s.colors[representId]
@@ -143,9 +150,10 @@ async function main() {
           }
           mapping[p] = _mapping
         } else {
-          mapping[p] = mappingPalette(s, t)
+          mapping[p] = await mappingPalette(s, t)
         }
       }
+      console.log("MAPPING", mapping)
       console.log("REPLACE RULE")
       await replaceRules(mapping)
       console.log("END REPLACE RULE")
@@ -156,10 +164,10 @@ async function main() {
           mapping,
           Object.values(mapping.bg)[0]
         )
-      }, 1000)
         console.log("END ADJUST TEXT CONTRAST")
+      }, 1000)
+      console.log("APPLIED")
     }
   )
-  console.log("APPLIED")
 }
 main()

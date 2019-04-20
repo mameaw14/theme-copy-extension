@@ -78,7 +78,9 @@ export default class Palette {
     const { colors } = this
     for (let i = 0; i < colors.length; i++) {
       if (colors[i].getAlpha() < 1) {
-        const overlayBg = Color.equals(colors[i].clone().setAlpha(1), WHITE) ? BLACK : WHITE
+        const overlayBg = Color.equals(colors[i].clone().setAlpha(1), WHITE)
+          ? BLACK
+          : WHITE
         const newColor = Color.mix(colors[i], overlayBg)
         vectors[i] = Object.values(newColor.lab)
       } else {
@@ -101,8 +103,10 @@ export default class Palette {
     const clusteringResults = await this.clustering(n)
     const results = {}
     for (let cluster of clusteringResults) {
-      results[colors[cluster.clusterInd[0]].original] =
-        colors[cluster.clusterInd[0]].weight
+      const weight = cluster.clusterInd.reduce((p, c) => {
+        p + colors[c].weight
+      }, 0)
+      results[colors[cluster.clusterInd[0]].original] = weight
     }
     return results
   }
@@ -111,8 +115,10 @@ export default class Palette {
     const clusteringResults = await this.clustering(n)
     const results = {}
     for (let cluster of clusteringResults) {
-      results[colors[cluster.clusterInd[0]].original] =
-        colors[cluster.clusterInd[0]].weight
+      const weight = cluster.clusterInd.reduce((p, c) => {
+        p + colors[c].weight
+      }, 0)
+      results[colors[cluster.clusterInd[0]].original] = weight
     }
     return { clusters: clusteringResults, results }
   }

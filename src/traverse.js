@@ -87,13 +87,20 @@ async function traverse(node1) {
   }
   for (let a in textColors) {
     textColors[a] *= multiplier.text
+    // multiplier.text /= 2
   }
   for (let a in bgColors) {
     bgColors[a] *= multiplier.bg
+    // multiplier.bg /= 2
   }
   for (let a in otherColors) {
     otherColors[a] *= multiplier.other
+    // multiplier.other /= 2
   }
+  // hack
+  textColors[Object.keys(textColors)[0]] += 10000
+  bgColors[Object.keys(bgColors)[0]] += 10000
+  otherColors[Object.keys(otherColors)[0]] += 10000
   return {
     textColors,
     bgColors,
