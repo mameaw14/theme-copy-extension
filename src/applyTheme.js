@@ -89,11 +89,64 @@ async function adjustTextContrast(
   return true
 }
 
+async function createMapping(s, t) {
+  const properties = Object.keys(s)
+  let mapping = {}
+
+  // t: copied, s: to paste
+  const palettes = {}
+  for (let p of properties) {
+    palettes[p] = {
+      s: new Palette(s[p]),
+      t: new Palette(t[p])
+    }
+  }
+  for (let p in palettes) {
+    let { t, s } = palettes[p]
+    if (s.length < t.length) {
+      const k = s.length
+      const newColors = await t.getNColors(k)
+      t = new Palette(newColors)
+      mapping[p] = await mappingPalette(s, t)
+    } else if (s.length > t.length) {
+      const k = t.length
+      const {
+        clusters,
+        results: newColors
+      } = await s.getNColorsAndClusteringResults(k)
+      const sPrime = new Palette(newColors)
+      const _mapping = await mappingPalette(sPrime, t)
+      for (let cluster of clusters) {
+        const representId = cluster.clusterInd[0]
+        const sourceColor = s.colors[representId]
+        const representKey = sourceColor.original
+        const targetColor = new Color(_mapping[representKey])
+
+        for (let i = 1; i < cluster.clusterInd.length; i++) {
+          const id = cluster.clusterInd[i]
+          const color = s.colors[id]
+          let newLuminance =
+            targetColor.lab.L + (sourceColor.lab.L - color.lab.L)
+          if (newLuminance < 0) newLuminance = 0
+          if (newLuminance > 100) newLuminance = 100
+          const newColorString = Color.lab_to_rgbstr({
+            L: newLuminance,
+            a: targetColor.lab.a,
+            b: targetColor.lab.b
+          })
+          _mapping[color.original] = newColorString
+        }
+      }
+      mapping[p] = _mapping
+    } else {
+      mapping[p] = await mappingPalette(s, t)
+    }
+  }
+  return mapping
+}
 async function main() {
-  let properties = ["text", "bg", "other"]
   const { textColors, bgColors, otherColors } = await traverse(document.body)
   const s = { text: textColors, bg: bgColors, other: otherColors }
-  var mapping = { text: {}, bg: {}, other: {} }
 
   chrome.storage.sync.get(
     ["textColors", "bgColors", "otherColors"],
@@ -103,56 +156,8 @@ async function main() {
         bg: data.bgColors,
         other: data.otherColors
       }
+      let mapping = await createMapping(s, t)
 
-      // t: copied, s: to paste
-      const palettes = {}
-      for (let p of properties) {
-        palettes[p] = {
-          s: new Palette(s[p]),
-          t: new Palette(t[p])
-        }
-      }
-      for (let p in palettes) {
-        let { t, s } = palettes[p]
-        if (s.length < t.length) {
-          const k = s.length
-          const newColors = await t.getNColors(k)
-          t = new Palette(newColors)
-          mapping[p] = await mappingPalette(s, t)
-        } else if (s.length > t.length) {
-          const k = t.length
-          const {
-            clusters,
-            results: newColors
-          } = await s.getNColorsAndClusteringResults(k)
-          const sPrime = new Palette(newColors)
-          const _mapping = await mappingPalette(sPrime, t)
-          for (let cluster of clusters) {
-            const representId = cluster.clusterInd[0]
-            const sourceColor = s.colors[representId]
-            const representKey = sourceColor.original
-            const targetColor = new Color(_mapping[representKey])
-
-            for (let i = 1; i < cluster.clusterInd.length; i++) {
-              const id = cluster.clusterInd[i]
-              const color = s.colors[id]
-              let newLuminance =
-                targetColor.lab.L + (sourceColor.lab.L - color.lab.L)
-              if (newLuminance < 0) newLuminance = 0
-              if (newLuminance > 100) newLuminance = 100
-              const newColorString = Color.lab_to_rgbstr({
-                L: newLuminance,
-                a: targetColor.lab.a,
-                b: targetColor.lab.b
-              })
-              _mapping[color.original] = newColorString
-            }
-          }
-          mapping[p] = _mapping
-        } else {
-          mapping[p] = await mappingPalette(s, t)
-        }
-      }
       console.log("MAPPING", mapping)
       console.log("REPLACE RULE")
       await replaceRules(mapping)

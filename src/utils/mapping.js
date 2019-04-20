@@ -2,10 +2,10 @@ import munkres from "munkres-js"
 import colordiff from "color-diff"
 
 function distance(a, b) {
-  const labDist = colordiff.diff(a.lab, b.lab) ** 2
+  // const labDist = colordiff.diff(a.lab, b.lab) ** 2
   const wDist = (a.weight - b.weight) ** 2
-  console.log(0.5*labDist, wDist)
-  return Math.sqrt(0.5*labDist + wDist)
+  // console.log(0.00001 * labDist, wDist)
+  return Math.sqrt(wDist)
 }
 
 function createMatrix(row, col) {
