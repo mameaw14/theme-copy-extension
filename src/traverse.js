@@ -5,11 +5,10 @@ export const BORDER_PROPERTIES = [
   "border-top-color",
   "border-bottom-color"
 ]
+const PROPERTIES = ["text", "bg", "other"]
 async function traverse(node1) {
   console.log("traverse")
-  var textColors = {}
-  var bgColors = {}
-  var otherColors = {}
+  let colors = { text: {}, bg: {}, other: {} }
   const traverse1 = async node => {
     if (node.nodeType === 1) {
       // element
@@ -23,10 +22,10 @@ async function traverse(node1) {
         if (!(border === "none")) {
           for (let p of BORDER_PROPERTIES) {
             let value = style.getPropertyValue(p)
-            if (value in otherColors) {
-              otherColors[value]++
+            if (value in colors.other) {
+              colors.other[value]++
             } else {
-              otherColors[value] = 1
+              colors.other[value] = 1
             }
           }
         }
@@ -35,15 +34,15 @@ async function traverse(node1) {
         let area = width * height
         if (isNaN(area)) area = 0
 
-        if (color in textColors) {
-          textColors[color]++
+        if (color in colors.text) {
+          colors.text[color]++
         } else {
-          textColors[color] = 1
+          colors.text[color] = 1
         }
-        if (bgColor in bgColors) {
-          bgColors[bgColor] += area
+        if (bgColor in colors.bg) {
+          colors.bg[bgColor] += area
         } else {
-          bgColors[bgColor] = area
+          colors.bg[bgColor] = area
         }
       } catch (error) {
         console.error(error)
@@ -57,63 +56,47 @@ async function traverse(node1) {
   }
 
   await traverse1(node1)
-  delete bgColors["rgba(0, 0, 0, 0)"]
+  delete colors.bg["rgba(0, 0, 0, 0)"]
 
-  const totalText = Object.keys(textColors).length * 100
-  const totalBg = Object.keys(bgColors).length * 100
-  const totalOther = Object.keys(otherColors).length * 100
-  var sumText = 0
-  var sumBg = 0
-  var sumOther = 0
-  for (let a in textColors) {
-    sumText += textColors[a]
+  const total = {
+    text: Object.keys(colors.text).length * 100,
+    bg: Object.keys(colors.bg).length * 100,
+    other: Object.keys(colors.other).length * 100
   }
-  for (let a in bgColors) {
-    sumBg += bgColors[a]
+  let sum = {}
+  for (let p of PROPERTIES) {
+    sum[p] = Object.values(colors[p]).reduce((a, b) => a + b)
+    for (let key in colors[p]) {
+      colors[p][key] *= total[p] / sum[p]
+    }
   }
-  for (let a in otherColors) {
-    sumOther += otherColors[a]
-  }
-  const multiplier = {
-    text: (1 / sumText) * totalText,
-    bg: (1 / sumBg) * totalBg,
-    other: (1 / sumOther) * totalOther
-  }
-  for (let a in textColors) {
-    textColors[a] *= multiplier.text
-  }
-  for (let a in bgColors) {
-    bgColors[a] *= multiplier.bg
-  }
-  for (let a in otherColors) {
-    otherColors[a] *= multiplier.other
-  }
-
-  let texts = Object.entries(textColors)
-  let bgs = Object.entries(bgColors)
-  let others = Object.entries(otherColors)
   const C = 10000
-  texts.sort((a, b) => b[1] - a[1])
-  bgs.sort((a, b) => b[1] - a[1])
-  others.sort((a, b) => b[1] - a[1])
+  let entries = {}
+  for (let p of PROPERTIES) {
+    entries[p] = Object.entries(colors[p]).sort((a, b) => b[1] - a[1])
+  }
 
-  const textTenPercent = 0.04 * totalText
+  const textTenPercent = 0.04 * total.text
   for (
     let i = 0;
-    i < texts.length && textColors[texts[i][0]] > textTenPercent;
+    i < entries.text.length && colors.text[entries.text[i][0]] > textTenPercent;
     i++
   ) {
-    textColors[texts[i][0]] += C / 2 ** i
+    colors.text[entries.text[i][0]] += C / 2 ** i
   }
 
-  const bgTenPercent = 0.07* totalBg
-  for (let i = 0; i < bgs.length && bgColors[bgs[i][0]] > bgTenPercent; i++) {
-    bgColors[bgs[i][0]] += C / 2 ** i
+  const bgTenPercent = 0.07 * total.bg
+  for (
+    let i = 0;
+    i < entries.bg.length && colors.bg[entries.bg[i][0]] > bgTenPercent;
+    i++
+  ) {
+    colors.bg[entries.bg[i][0]] += C / 2 ** i
   }
   return {
-    textColors,
-    bgColors,
-    otherColors
+    bgColors: colors.bg,
+    textColors: colors.text,
+    otherColors: colors.other
   }
 }
 
