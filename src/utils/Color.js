@@ -25,7 +25,6 @@ export default class Color extends tinycolor {
         newColor.getLuminance() === 1 ||
         newColor.getLuminance() === 0
       ) {
-        console.log("DAN")
         const whiteTxtLmn = toKeep.contrast("white")
         const blackTxtLmn = toKeep.contrast("black")
         if (whiteTxtLmn > blackTxtLmn) return new Color("white")
