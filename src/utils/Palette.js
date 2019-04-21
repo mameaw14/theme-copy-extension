@@ -1,5 +1,6 @@
 import Color from "./Color"
 import kmeans from "./kmeans"
+import { log } from "./logMessage";
 
 const WHITE = new Color("white")
 const BLACK = new Color("black")
@@ -46,6 +47,7 @@ export default class Palette {
   async clusterByHue() {
     const { colors } = this
     const groupByHue = this.groupByHue()
+    log("groupByHue", groupByHue)
     const clusters = []
     let currentHue = -1
     for (let g in groupByHue) {

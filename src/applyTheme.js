@@ -122,6 +122,7 @@ async function mapPaletteWithoutFill(s, t) {
   let mapping
   if (s.length < t.length) {
     const k = s.length
+    if (k === 0) return []
     const {
       results: newColors,
       clusters
@@ -140,6 +141,7 @@ async function mapPaletteWithoutFill(s, t) {
     }
   } else if (s.length > t.length) {
     const k = t.length
+    if (k === 0) return []
     const {
       clusters,
       results: newColors
@@ -175,20 +177,23 @@ function preserveAlpha(mapping) {
   return mapping
 }
 async function fillAndMapPalette(s, t) {
+  const useColorCompare = true
   let mapping
   if (s.length < t.length) {
     const k = s.length
+    if (k === 0) return []
     const newColors = await t.getNColors(k)
     t = new Palette(newColors)
-    mapping = await mappingPalette(s, t)
+    mapping = await mappingPalette(s, t, useColorCompare)
   } else if (s.length > t.length) {
     const k = t.length
+    if (k === 0) return []
     const {
       clusters,
       results: newColors
     } = await s.getNColorsAndClusteringResults(k)
     const sPrime = new Palette(newColors)
-    const _mapping = await mappingPalette(sPrime, t)
+    const _mapping = await mappingPalette(sPrime, t, useColorCompare)
     for (let cluster of clusters) {
       const representId = cluster.clusterInd[0]
       const sourceColor = s.colors[representId]
@@ -210,7 +215,7 @@ async function fillAndMapPalette(s, t) {
     }
     mapping = _mapping
   } else {
-    mapping = await mappingPalette(s, t)
+    mapping = await mappingPalette(s, t, useColorCompare)
   }
   return preserveAlpha(mapping)
 }
@@ -234,7 +239,7 @@ async function createMapping(s, t) {
     let clustered = {},
       representColor = {}
     clustered.t = await t.clusterByHue() // get clustered color palette
-    clustered.t = clustered.t.filter(c => c.ratio > 0.001 && !c.hue.includes(0)) // filter noise out
+    clustered.t = clustered.t.filter(c => c.ratio > 0.01) // filter noise out
     representColor.t = getRepresentColor(clustered.t) // get represent color with cluster id
 
     clustered.s = await s.clusterByHue() // get clustered color palette
