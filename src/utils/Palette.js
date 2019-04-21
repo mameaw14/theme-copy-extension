@@ -12,7 +12,6 @@ export default class Palette {
     }
 
     this.colors.sort((a, b) => b.weight - a.weight)
-    // console.log(`Created a palette with ${this.colors.length} colors`)
   }
   get length() {
     return this.colors.length
@@ -42,7 +41,6 @@ export default class Palette {
       }
       groups[hue].push(i)
     }
-    console.log("group by hue: ", groups)
     return groups
   }
   async clusterByHue() {
@@ -97,7 +95,6 @@ export default class Palette {
     for (let cluster of clusters) {
       cluster.ratio = cluster.weight / totalSum
     }
-    console.log("cluster by hue", clusters)
     return clusters
   }
   get hueHistogram() {
@@ -108,8 +105,6 @@ export default class Palette {
       let hue = Math.round(color.hue)
       histogram[hue]++
     }
-    console.log(`Construct histogram of ${this.colors.length} colors`)
-    console.log(histogram)
     this._hueHistogram = histogram
     return this._hueHistogram
   }
@@ -153,7 +148,6 @@ export default class Palette {
   }
   createFinestSegmentation() {
     const localMinima = this.findLocalMinima()
-    console.log(localMinima.length, localMinima)
   }
 
   async clustering(k = 5) {

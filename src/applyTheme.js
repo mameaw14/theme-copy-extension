@@ -112,14 +112,11 @@ function getPaletteOfRepresentColor(palette, clustered) {
   const results = {}
   for (let i = 0; i < clustered.length; i++) {
     const cluster = clustered[i]
-    results[cluster.centroid.original] = cluster.cluster.reduce(
-      (a, b) => a + b.weight,
-      0
-    )
+    results[cluster.centroid.original] = cluster.cluster.weight
   }
   return new Palette(results)
 }
-async function MapPaletteWithoutFill(s, t) {
+async function mapPaletteWithoutFill(s, t) {
   let results = []
   let mapping
   if (s.length < t.length) {
@@ -233,7 +230,7 @@ async function createMapping(s, t) {
 
     let srPalette = getPaletteOfRepresentColor(s, clustered.s)
     let trPalette = getPaletteOfRepresentColor(t, clustered.t)
-    let matched = await MapPaletteWithoutFill(srPalette, trPalette) // get list of tuple [[sOri,tOri], ...] logic like mappingPalette
+    let matched = await mapPaletteWithoutFill(srPalette, trPalette) // get list of tuple [[sOri,tOri], ...] logic like mappingPalette
     console.log("match", matched, srPalette.length, trPalette.length)
     for (let [sKey, tKey] of matched) {
       let sPalette = Palette.mergePalette(
@@ -252,46 +249,6 @@ async function createMapping(s, t) {
       mapping[p] = { ...mapping[p], ..._mapping }
     }
   }
-
-  //   if (s.length < t.length) {
-  //     const k = s.length
-  //     const newColors = await t.getNColors(k)
-  //     t = new Palette(newColors)
-  //     mapping[p] = await mappingPalette(s, t)
-  //   } else if (s.length > t.length) {
-  //     const k = t.length
-  //     const {
-  //       clusters,
-  //       results: newColors
-  //     } = await s.getNColorsAndClusteringResults(k)
-  //     const sPrime = new Palette(newColors)
-  //     const _mapping = await mappingPalette(sPrime, t)
-  //     for (let cluster of clusters) {
-  //       const representId = cluster.clusterInd[0]
-  //       const sourceColor = s.colors[representId]
-  //       const representKey = sourceColor.original
-  //       const targetColor = new Color(_mapping[representKey])
-
-  //       for (let i = 1; i < cluster.clusterInd.length; i++) {
-  //         const id = cluster.clusterInd[i]
-  //         const color = s.colors[id]
-  //         let newLuminance =
-  //           targetColor.lab.L + (sourceColor.lab.L - color.lab.L)
-  //         if (newLuminance < 0) newLuminance = 0
-  //         if (newLuminance > 100) newLuminance = 100
-  //         const newColorString = Color.lab_to_rgbstr({
-  //           L: newLuminance,
-  //           a: targetColor.lab.a,
-  //           b: targetColor.lab.b
-  //         })
-  //         _mapping[color.original] = newColorString
-  //       }
-  //     }
-  //     mapping[p] = _mapping
-  //   } else {
-  //     mapping[p] = await mappingPalette(s, t)
-  //   }
-  // }
   return mapping
 }
 async function main() {
