@@ -66,7 +66,7 @@ async function adjustTextContrast(
       let style = window.getComputedStyle(node)
       let color = style.getPropertyValue("color")
       let bgColor = style.getPropertyValue("background-color")
-      if (bgColor !== "rgba(0, 0, 0, 0)") {
+      if ((new Color(bgColor).getAlpha() != 0)) {
         nearlestBgColor = bgColor
       }
       let fg = new Color(color)
@@ -234,12 +234,12 @@ async function createMapping(s, t) {
     let clustered = {},
       representColor = {}
     clustered.t = await t.clusterByHue() // get clustered color palette
-    clustered.t = clustered.t.filter(c => c.ratio > 0.001) // filter noise out
+    clustered.t = clustered.t.filter(c => c.ratio > 0.001 && !c.hue.includes(0)) // filter noise out
     representColor.t = getRepresentColor(clustered.t) // get represent color with cluster id
 
     clustered.s = await s.clusterByHue() // get clustered color palette
     representColor.s = getRepresentColor(clustered.s) // get represent color with cluster id
-
+    log(`First cluster by hue ${p}`, "s: ", clustered.s, "t: ", clustered.t)
     let srPalette = getPaletteOfRepresentColor(s, clustered.s)
     let trPalette = getPaletteOfRepresentColor(t, clustered.t)
     let matched = await mapPaletteWithoutFill(srPalette, trPalette) // get list of tuple [[sOri,tOri], ...] logic like mappingPalette
@@ -286,8 +286,7 @@ async function main() {
         log("ADJUST TEXT CONTRAST")
         await adjustTextContrast(
           document.body,
-          mapping,
-          Object.values(mapping.bg)[0]
+          mapping
         )
         log("APPLIED")
         log("-----------------------------------")

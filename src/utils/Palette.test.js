@@ -36,7 +36,3 @@ test("groupByHue", () => {
     255: [8],
   })
 })
-
-// test("clusterByHue", () => {
-//   expect(p1.clusterByHue()).toBe(false)
-// })

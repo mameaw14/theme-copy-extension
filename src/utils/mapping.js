@@ -6,7 +6,7 @@ function distance(a, b) {
   // const labDist = colordiff.diff(a.lab, b.lab) ** 2
   const wDist = (a.weight - b.weight) ** 2
   // console.log(0.00001 * labDist, wDist)
-  return Math.sqrt(wDist)
+  return wDist
 }
 
 function createMatrix(row, col) {
