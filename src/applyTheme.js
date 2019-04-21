@@ -239,7 +239,7 @@ async function createMapping(s, t) {
     let clustered = {},
       representColor = {}
     clustered.t = await t.clusterByHue() // get clustered color palette
-    clustered.t = clustered.t.filter(c => c.ratio > 0.01) // filter noise out
+    clustered.t = clustered.t.filter(c => c.ratio > 0.005) // filter noise out
     representColor.t = getRepresentColor(clustered.t) // get represent color with cluster id
 
     clustered.s = await s.clusterByHue() // get clustered color palette
