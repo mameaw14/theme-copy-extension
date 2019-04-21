@@ -103,6 +103,30 @@ async function createMapping(s, t) {
   }
   for (let p in palettes) {
     let { t, s } = palettes[p]
+  //   mapping[p] = {}
+  //   let clustered = {},
+  //     representColor = {}
+  //   clustered.t = t.clusterByHue() // get clustered color palette
+  //   representColor.t = getRepresentColor(clustered) // get represent color with cluster id
+
+  //   clustered.s = s.clusterByHue() // get clustered color palette
+  //   representColor.s = getRepresentColor(clustered) // get represent color with cluster id
+
+  //   let matched = mappingPalette(Object.keys(representColor.s), Object.keys(representColor.t)) // get list of tuple [[sOri,tOri], ...] logic like mappingPalette
+  //   for (let key in matched) {
+  //     const sOri = key
+  //     const tOri = matched[key]
+  //     let scid = representColor.s[sOri]
+  //     let tcid = representColor.s[tOri]
+  //     let sPalette = clustered[scid]
+  //     let tPalette = clustered[tcid]
+  //     let _mapping = mappingPalette(sPalette, tPalette)
+  //     mapping[p] = {...mapping[p], ..._mapping}
+  //   }
+  // }
+
+
+
     if (s.length < t.length) {
       const k = s.length
       const newColors = await t.getNColors(k)

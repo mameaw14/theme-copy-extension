@@ -30,7 +30,7 @@ async function mappingPalette(source, target) {
     let tid = tuple[1]
 
     targetColors[tid].setAlpha(sourceColors[sid].getAlpha())
-    mapping[sourceColors[sid].original] = targetColors[tid].toRgbString()
+    mapping[sourceColors[sid].original] = targetColors[tid].original
   }
   return mapping
 }

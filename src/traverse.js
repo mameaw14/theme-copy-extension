@@ -93,6 +93,7 @@ async function traverse(node1) {
   ) {
     colors.bg[entries.bg[i][0]] += C / 2 ** i
   }
+  console.log(colors)
   return {
     bgColors: colors.bg,
     textColors: colors.text,
