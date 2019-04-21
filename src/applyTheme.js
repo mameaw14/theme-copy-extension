@@ -5,6 +5,7 @@ import Palette from "./utils/Palette.js"
 import mappingPalette from "./utils/mapping.js"
 import Color from "./utils/Color.js"
 import { loadText, getRules } from "./utils/stylesheet.js"
+import { log } from "./utils/logMessage.js";
 const BORDER_PROPERTIES = [
   "borderLeftColor",
   "borderRightColor",
@@ -163,6 +164,16 @@ async function mapPaletteWithoutFill(s, t) {
   }
   return results
 }
+function preserveAlpha(mapping) {
+  for (let m in mapping) {
+    const s = new Color(m)
+    const t = new Color(mapping[m])
+
+    t.setAlpha(s.getAlpha())
+    mapping[m] = t.toRgbString()
+  }
+  return mapping
+}
 async function fillAndMapPalette(s, t) {
   let mapping
   if (s.length < t.length) {
@@ -201,10 +212,11 @@ async function fillAndMapPalette(s, t) {
   } else {
     mapping = await mappingPalette(s, t)
   }
-  return mapping
+  return preserveAlpha(mapping)
 }
 
 async function createMapping(s, t) {
+  log("CREATE MAPPING...")
   const properties = Object.keys(s)
   let mapping = {}
 
@@ -222,7 +234,7 @@ async function createMapping(s, t) {
     let clustered = {},
       representColor = {}
     clustered.t = await t.clusterByHue() // get clustered color palette
-    clustered.t = clustered.t.filter(c => c.ratio > 0.01) // filter noise out
+    clustered.t = clustered.t.filter(c => c.ratio > 0.001) // filter noise out
     representColor.t = getRepresentColor(clustered.t) // get represent color with cluster id
 
     clustered.s = await s.clusterByHue() // get clustered color palette
@@ -231,7 +243,7 @@ async function createMapping(s, t) {
     let srPalette = getPaletteOfRepresentColor(s, clustered.s)
     let trPalette = getPaletteOfRepresentColor(t, clustered.t)
     let matched = await mapPaletteWithoutFill(srPalette, trPalette) // get list of tuple [[sOri,tOri], ...] logic like mappingPalette
-    console.log("match", matched, srPalette.length, trPalette.length)
+    log(`First level map ${p}: `, matched, "s: ", srPalette, "t: ", trPalette)
     for (let [sKey, tKey] of matched) {
       let sPalette = Palette.mergePalette(
         sKey.map(key => {
@@ -249,9 +261,11 @@ async function createMapping(s, t) {
       mapping[p] = { ...mapping[p], ..._mapping }
     }
   }
+  log("Complete Map: ", mapping)
   return mapping
 }
 async function main() {
+  log(`Apply theme at ${window.location.href}`)
   const { textColors, bgColors, otherColors } = await traverse(document.body)
   const s = { text: textColors, bg: bgColors, other: otherColors }
 
@@ -263,22 +277,21 @@ async function main() {
         bg: data.bgColors,
         other: data.otherColors
       }
+      log("MAPPING")
       let mapping = await createMapping(s, t)
 
-      console.log("MAPPING", mapping)
-      console.log("REPLACE RULE")
+      log("REPLACE RULES")
       await replaceRules(mapping)
-      console.log("END REPLACE RULE")
-      await setTimeout(async () => {
-        console.log("ADJUST TEXT CONTRAST")
+      setTimeout(async () => {
+        log("ADJUST TEXT CONTRAST")
         await adjustTextContrast(
           document.body,
           mapping,
           Object.values(mapping.bg)[0]
         )
-        console.log("END ADJUST TEXT CONTRAST")
+        log("APPLIED")
+        log("-----------------------------------")
       }, 1000)
-      console.log("APPLIED")
     }
   )
 }

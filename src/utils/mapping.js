@@ -1,5 +1,6 @@
 import munkres from "munkres-js"
 import colordiff from "color-diff"
+import { log } from "./logMessage"
 
 function distance(a, b) {
   // const labDist = colordiff.diff(a.lab, b.lab) ** 2
@@ -19,7 +20,7 @@ function createMatrix(row, col) {
   }
   return matrix
 }
-async function mappingPalette(source, target) {
+async function mappingPalette(source, target, preserveAlpha = false) {
   const targetColors = target.colors
   const sourceColors = source.colors
   const matrix = createMatrix(sourceColors, targetColors)
@@ -29,8 +30,7 @@ async function mappingPalette(source, target) {
     let sid = tuple[0]
     let tid = tuple[1]
 
-    targetColors[tid].setAlpha(sourceColors[sid].getAlpha())
-    mapping[sourceColors[sid].original] = targetColors[tid].original
+    mapping[sourceColors[sid].original] = targetColors[tid].toRgbString()
   }
   return mapping
 }

@@ -1,3 +1,5 @@
+import { log } from "./utils/logMessage"
+
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Applying_color
 export const BORDER_PROPERTIES = [
   "border-left-color",
@@ -7,7 +9,7 @@ export const BORDER_PROPERTIES = [
 ]
 const PROPERTIES = ["text", "bg", "other"]
 async function traverse(node1) {
-  console.log("traverse")
+  log("TRAVERSE")
   let colors = { text: {}, bg: {}, other: {} }
   const traverse1 = async node => {
     if (node.nodeType === 1) {
@@ -93,7 +95,7 @@ async function traverse(node1) {
   ) {
     colors.bg[entries.bg[i][0]] += C / 2 ** i
   }
-  console.log(colors)
+  log("Traverse Result:", colors)
   return {
     bgColors: colors.bg,
     textColors: colors.text,
