@@ -1,5 +1,9 @@
 import Color from "./Color"
 import kmeans from "./kmeans"
+import { log } from "./logMessage";
+
+const WHITE = new Color("white")
+const BLACK = new Color("black")
 
 export default class Palette {
   constructor(colors) {
@@ -9,10 +13,91 @@ export default class Palette {
     }
 
     this.colors.sort((a, b) => b.weight - a.weight)
-    console.log(`Created a palette with ${this.colors.length} colors`)
   }
   get length() {
     return this.colors.length
+  }
+
+  static mergePalette(palettes) {
+    let colors = {}
+    for (let p of palettes) {
+      for (let color of p.colors) {
+        let { original } = color
+        if (!(original in colors)) {
+          colors[original] = color.weight
+        }
+      }
+    }
+    return new Palette(colors)
+  }
+
+  groupByHue() {
+    const { colors } = this
+    const groups = {}
+    for (let i = 0; i < colors.length; i++) {
+      const color = colors[i]
+      let hue = Math.round(color.hue)
+      if (!(hue in groups)) {
+        groups[hue] = []
+      }
+      groups[hue].push(i)
+    }
+    return groups
+  }
+  async clusterByHue() {
+    const { colors } = this
+    const groupByHue = this.groupByHue()
+    log("groupByHue", groupByHue)
+    const clusters = []
+    let currentHue = -1
+    for (let g in groupByHue) {
+      const hue = +g
+      const set = groupByHue[hue]
+
+      if (currentHue === -1 || (hue - currentHue) > 2) {
+        clusters.push({
+          clusterInd: [],
+          hue: [],
+          cluster: []
+        })
+      }
+      clusters[clusters.length - 1].hue.push(hue)
+      for (let i of set) {
+        clusters[clusters.length - 1].clusterInd.push(i)
+        clusters[clusters.length - 1].cluster.push(colors[i])
+      }
+      currentHue = hue
+    }
+    const LAST_ID = clusters.length - 1
+    const firstCluster = clusters[0]
+    const lastCluster = clusters[LAST_ID]
+    if (
+      Math.min(...firstCluster.hue) + 361 - Math.max(...lastCluster.hue) <=
+      2
+    ) {
+      for (let p of Object.keys(clusters[0])) {
+        cluster[0][p] = [...clusters[0][p], ...clusters[LAST_ID][p]]
+      }
+      clusters.pop()
+    }
+
+    let totalSum = 0
+    for (let cluster of clusters) {
+      cluster.centroid = colors[Math.min(...cluster.clusterInd)]
+      const newColors = {}
+      let sumWeight = 0
+      for (let color of cluster.cluster) {
+        newColors[color.original] = color.weight
+        sumWeight += color.weight
+      }
+      cluster.palette = new Palette(newColors)
+      cluster.weight = sumWeight
+      totalSum += sumWeight
+    }
+    for (let cluster of clusters) {
+      cluster.ratio = cluster.weight / totalSum
+    }
+    return clusters
   }
   get hueHistogram() {
     if (this._hueHistogram) return this._hueHistogram
@@ -22,8 +107,6 @@ export default class Palette {
       let hue = Math.round(color.hue)
       histogram[hue]++
     }
-    console.log(`Construct histogram of ${this.colors.length} colors`)
-    console.log(histogram)
     this._hueHistogram = histogram
     return this._hueHistogram
   }
@@ -67,16 +150,22 @@ export default class Palette {
   }
   createFinestSegmentation() {
     const localMinima = this.findLocalMinima()
-    console.log(localMinima.length, localMinima)
   }
 
   async clustering(k = 5) {
     const vectors = []
     const { colors } = this
     for (let i = 0; i < colors.length; i++) {
-      vectors[i] = Object.values(colors[i].lab)
+      if (colors[i].getAlpha() < 1) {
+        const overlayBg = Color.equals(colors[i].clone().setAlpha(1), WHITE)
+          ? BLACK
+          : WHITE
+        const newColor = Color.mix(colors[i], overlayBg)
+        vectors[i] = Object.values(newColor.lab)
+      } else {
+        vectors[i] = Object.values(colors[i].lab)
+      }
     }
-    console.log("CLUSTERING", colors)
     let results
     await kmeans.clusterize(
       vectors,
@@ -93,8 +182,10 @@ export default class Palette {
     const clusteringResults = await this.clustering(n)
     const results = {}
     for (let cluster of clusteringResults) {
-      results[colors[cluster.clusterInd[0]].original] =
-        colors[cluster.clusterInd[0]].weight
+      const weight = cluster.clusterInd.reduce((p, c) => {
+        p + colors[c].weight
+      }, 0)
+      results[colors[cluster.clusterInd[0]].original] = weight
     }
     return results
   }
@@ -103,8 +194,10 @@ export default class Palette {
     const clusteringResults = await this.clustering(n)
     const results = {}
     for (let cluster of clusteringResults) {
-      results[colors[cluster.clusterInd[0]].original] =
-        colors[cluster.clusterInd[0]].weight
+      const weight = cluster.clusterInd.reduce((p, c) => {
+        p + colors[c].weight
+      }, 0)
+      results[colors[cluster.clusterInd[0]].original] = weight
     }
     return { clusters: clusteringResults, results }
   }

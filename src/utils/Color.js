@@ -1,14 +1,37 @@
 import colordiff from "color-diff"
+import tinycolor from "tinycolor2"
+import _ from "underscore"
 
-export default class Color {
-  constructor(rgbString, weight = 0) {
+export default class Color extends tinycolor {
+  constructor(input, weight = 0) {
+    super(input)
     this.weight = weight
-    this.original = rgbString
-    let rgb = rgbString.replace(/[^\d,.]/g, "").split(",")
-    let isRgba = rgb.length === 4
-    this.rgba = isRgba
-      ? { R: rgb[0], G: rgb[1], B: rgb[2], A: rgb[3] }
-      : { R: rgb[0], G: rgb[1], B: rgb[2], A: 1 }
+  }
+  static isContrastOK(a, b) {
+    return tinycolor.isReadable(a, b)
+  }
+  static getCompatibleTextColor(toChange, toKeep) {
+    const STEP = 10
+    let makeItLight = toKeep.isDark()
+    let newColor = toChange.lighten(50)
+    while (!Color.isContrastOK(newColor, toKeep)) {
+      const con = newColor.contrast(toKeep)
+      if (makeItLight) {
+        newColor = newColor.brighten(STEP)
+      } else {
+        newColor = newColor.darken(STEP)
+      }
+      if (
+        newColor.getLuminance() === 1 ||
+        newColor.getLuminance() === 0
+      ) {
+        const whiteTxtLmn = toKeep.contrast("white")
+        const blackTxtLmn = toKeep.contrast("black")
+        if (whiteTxtLmn > blackTxtLmn) return new Color("white")
+        return new Color("black")
+      }
+    }
+    return newColor
   }
   static distance(a, b) {
     return colordiff.diff(
@@ -20,10 +43,12 @@ export default class Color {
     return this.rgba_to_string(this.lab_to_rgb(lab))
   }
   static rgba_to_string(rgba) {
-    const { r, g, b, a = 1 } = rgba
-    return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})` 
+    const { R, G, B, A = 1 } = rgba
+    return A === 1 ? `rgb(${R}, ${G}, ${B})` : `rgba(${R}, ${G}, ${B}, ${A})`
   }
   static lab_to_rgb(lab) {
+    // https://github.com/antimatter15/rgb-lab/blob/master/color.js
+
     let y = (lab.L + 16) / 116,
       x = lab.a / 500 + y,
       z = y - lab.b / 200,
@@ -44,40 +69,35 @@ export default class Color {
     b = b > 0.0031308 ? 1.055 * Math.pow(b, 1 / 2.4) - 0.055 : 12.92 * b
 
     return {
-      r: Math.max(0, Math.min(1, r)) * 255,
-      g: Math.max(0, Math.min(1, g)) * 255,
-      b: Math.max(0, Math.min(1, b)) * 255
+      R: Math.max(0, Math.min(1, r)) * 255,
+      G: Math.max(0, Math.min(1, g)) * 255,
+      B: Math.max(0, Math.min(1, b)) * 255
     }
+  }
+  static mix(color1, color2) {
+    const n = new Color(tinycolor.mix(color1, color2).toRgb())
+    return n
+  }
+  get rgba() {
+    const rgb = this.toRgb()
+    return { R: rgb.r, G: rgb.g, B: rgb.b, A: rgb.a }
+  }
+  get original() {
+    return this.getOriginalInput()
+  }
+  get luminance() {
+    return this.getLuminance()
+  }
+  get hsl() {
+    return this.toHsl()
   }
   get lab() {
-    if (this._lab) return this._lab
-    this._lab = colordiff.rgba_to_lab(this.rgba)
-    return this._lab
+    return colordiff.rgba_to_lab(this.rgba)
   }
   get hue() {
-    if (this._hue) {
-      return this._hue
-    }
-    const { R, G, B } = this.rgba
-    let min, max, delta, hue
-
-    min = Math.min(R, G, B)
-    max = Math.max(R, G, B)
-    delta = max - min
-
-    if (delta == 0) {
-      hue = 0
-    } else {
-      if (R == max) {
-        hue = (G - B) / delta
-      } else if (G == max) {
-        hue = 2 + (B - R) / delta
-      } else {
-        hue = 4 + (R - G) / delta
-      }
-      hue = (hue * 60 + 360) % 360
-    }
-    this._hue = hue
-    return this._hue
+    return this.hsl.h
+  }
+  contrast(color) {
+    return tinycolor.readability(this, color)
   }
 }

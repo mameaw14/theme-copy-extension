@@ -1,7 +1,16 @@
+import { log } from "./utils/logMessage"
+
+// https://developer.mozilla.org/en-US/docs/Web/HTML/Applying_color
+export const BORDER_PROPERTIES = [
+  "border-left-color",
+  "border-right-color",
+  "border-top-color",
+  "border-bottom-color"
+]
+const PROPERTIES = ["text", "bg", "other"]
 async function traverse(node1) {
-  console.log("traverse")
-  var textColors = {}
-  var bgColors = {}
+  log("TRAVERSE")
+  let colors = { text: {}, bg: {}, other: {} }
   const traverse1 = async node => {
     if (node.nodeType === 1) {
       // element
@@ -10,20 +19,32 @@ async function traverse(node1) {
         let style = window.getComputedStyle(node)
         let color = style.getPropertyValue("color")
         let bgColor = style.getPropertyValue("background-color")
+        let outline = style.getPropertyValue("outline-style")
+        let border = style.getPropertyValue("border-style")
+        if (!(border === "none")) {
+          for (let p of BORDER_PROPERTIES) {
+            let value = style.getPropertyValue(p)
+            if (value in colors.other) {
+              colors.other[value]++
+            } else {
+              colors.other[value] = 1
+            }
+          }
+        }
         let width = node.offsetWidth
         let height = node.offsetHeight
         let area = width * height
         if (isNaN(area)) area = 0
 
-        if (!(color in textColors)) {
-          textColors[color] = 1
+        if (color in colors.text) {
+          colors.text[color]++
         } else {
-          textColors[color]++
+          colors.text[color] = 1
         }
-        if (!(bgColor in bgColors)) {
-          bgColors[bgColor] = area
+        if (bgColor in colors.bg) {
+          colors.bg[bgColor] += area
         } else {
-          bgColors[bgColor] += area
+          colors.bg[bgColor] = area
         }
       } catch (error) {
         console.error(error)
@@ -37,36 +58,48 @@ async function traverse(node1) {
   }
 
   await traverse1(node1)
-  delete bgColors["rgba(0, 0, 0, 0)"]
+  delete colors.bg["rgba(0, 0, 0, 0)"]
 
+  const total = {
+    text: Object.keys(colors.text).length * 100,
+    bg: Object.keys(colors.bg).length * 100,
+    other: Object.keys(colors.other).length * 100
+  }
+  let sum = {}
+  for (let p of PROPERTIES) {
+    sum[p] = Object.values(colors[p]).reduce((a, b) => a + b)
+    for (let key in colors[p]) {
+      colors[p][key] *= total[p] / sum[p]
+    }
+  }
+  const C = 10000
+  let entries = {}
+  for (let p of PROPERTIES) {
+    entries[p] = Object.entries(colors[p]).sort((a, b) => b[1] - a[1])
+  }
 
-  let texts = Object.entries(textColors)
-  let bgs = Object.entries(bgColors)
-  texts.sort((a, b) => b[1] - a[1])
-  bgs.sort((a, b) => b[1] - a[1])
-  const totalText = Object.keys(textColors).length * 100
-  const totalBg = Object.keys(bgColors).length * 100
-  var sumText = 0
-  var sumBg = 0
-  for (let a in textColors) {
-    sumText += textColors[a]
+  const textTenPercent = 0.04 * total.text
+  for (
+    let i = 0;
+    i < entries.text.length && colors.text[entries.text[i][0]] > textTenPercent;
+    i++
+  ) {
+    colors.text[entries.text[i][0]] += C / 2 ** i
   }
-  for (let a in bgColors) {
-    sumBg += bgColors[a]
+
+  const bgTenPercent = 0.07 * total.bg
+  for (
+    let i = 0;
+    i < entries.bg.length && colors.bg[entries.bg[i][0]] > bgTenPercent;
+    i++
+  ) {
+    colors.bg[entries.bg[i][0]] += C / 2 ** i
   }
-  const multiplier = {
-    text: (1 / sumText) * totalText,
-    bg: (1 / sumBg) * totalBg
-  }
-  for (let a in textColors) {
-    textColors[a] *= multiplier.text
-  }
-  for (let a in bgColors) {
-    bgColors[a] *= multiplier.bg
-  }
+  log("Traverse Result:", colors)
   return {
-    textColors,
-    bgColors
+    bgColors: colors.bg,
+    textColors: colors.text,
+    otherColors: colors.other
   }
 }
 
