@@ -21,8 +21,6 @@ async function replaceRules(mapping) {
     try {
       const sheet = styleSheets[i]
       const rules = await getRules(sheet)
-      // console.log("RULES", i)
-      // console.log("LENGTH", styleSheets.length)
       for (let rule of rules) {
         if (!("style" in rule)) continue
         let color = rule.style.color
@@ -52,16 +50,51 @@ async function replaceRules(mapping) {
   }
   return
 }
+
+async function addInlineCSS(
+  node,
+  mapping,
+  nearlestBgColor = "white",
+) {
+  if (node.nodeType === 1) {
+    // element
+    try {
+      let style = window.getComputedStyle(node)
+      let color = style.getPropertyValue("color")
+      let bgColor = style.getPropertyValue("background-color")
+      if (bgColor in mapping.bg) {
+        addCssText(node, "background-color", mapping.bg[bgColor])
+      }
+      if (new Color(bgColor).getAlpha() != 0) {
+        nearlestBgColor = bgColor
+      }
+      let fg = new Color(color)
+      const bg = new Color(nearlestBgColor)
+      if (!Color.isContrastOK(fg, bg)) {
+        addCssText(
+          node,
+          "color",
+          Color.getCompatibleTextColor(fg, bg).toRgbString()
+        )
+      }
+      node.setAttribute("bggetted", nearlestBgColor)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  node.childNodes.forEach(child => {
+    addInlineCSS(child, mapping, nearlestBgColor)
+  })
+  return true
+}
 async function adjustTextContrast(
   node,
   mapping,
   nearlestBgColor = "white",
-  n = 1
 ) {
-  if (n === 20) return false
   if (node.nodeType === 1) {
     // element
-    // console.log(node)
     try {
       let style = window.getComputedStyle(node)
       let color = style.getPropertyValue("color")
@@ -85,7 +118,7 @@ async function adjustTextContrast(
   }
 
   node.childNodes.forEach(child => {
-    adjustTextContrast(child, mapping, nearlestBgColor, n + 1)
+    adjustTextContrast(child, mapping, nearlestBgColor)
   })
   return true
 }
@@ -128,7 +161,6 @@ async function mapPaletteWithoutFill(s, t) {
       clusters
     } = await t.getNColorsAndClusteringResults(k)
     const representColor = getRepresentColor2(t, clusters)
-    // console.log(clusters)
     const tPrime = new Palette(newColors)
     mapping = await mappingPalette(s, tPrime)
     for (let key in mapping) {
@@ -286,6 +318,7 @@ async function main() {
       let mapping = await createMapping(s, t)
 
       log("REPLACE RULES")
+      await addInlineCSS(document.body, mapping)
       await replaceRules(mapping)
       setTimeout(async () => {
         log("ADJUST TEXT CONTRAST")

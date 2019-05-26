@@ -76,7 +76,7 @@ export default class Palette {
       2
     ) {
       for (let p of Object.keys(clusters[0])) {
-        cluster[0][p] = [...clusters[0][p], ...clusters[LAST_ID][p]]
+        clusters[0][p] = [...clusters[0][p], ...clusters[LAST_ID][p]]
       }
       clusters.pop()
     }

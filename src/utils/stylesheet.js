@@ -18,6 +18,5 @@ export async function getRules(sheet) {
   sheet.ownerNode.parentNode.insertBefore(cors, sheet.ownerNode.nextSibling)
   sheet.disabled = true
   cors.sheet.disabled = false
-  // console.log('cors',cors)
   return cors.sheet.cssRules
 }
