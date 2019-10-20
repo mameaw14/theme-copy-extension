@@ -1,6 +1,6 @@
 {
   "name": "Theme Copy",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Copy a site theme to another site.",
   "author": "Pinyaporn Eiammongkol",
   "applications": {
@@ -9,9 +9,7 @@
       "strict_min_version": "57.0"
     }
   },
-  "permissions": ["tabs", "storage",
-    "<all_urls>"
-  ],
+  "permissions": ["tabs", "storage", "<all_urls>"],
   "background": {
     "page": "src/background.html",
     "persistent": true
