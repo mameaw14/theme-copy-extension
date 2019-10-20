@@ -4,12 +4,12 @@
     "test": "jest"
   },
   "devDependencies": {
-    "@babel/cli": "^7.4.3",
-    "@babel/core": "^7.4.3",
+    "@babel/cli": "^7.6.4",
+    "@babel/core": "^7.6.4",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
-    "jest": "^24.7.1",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.3.0"
+    "jest": "^24.9.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9"
   },
   "dependencies": {
     "color-diff": "^1.1.0",
