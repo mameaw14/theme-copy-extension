@@ -2,11 +2,11 @@
 
 ## Install dependencies
 
-`yarn`
+`npm i`
 
 ## Build
 
-`yarn build`
+`npm run build`
 
 ## Build Result
 
