@@ -1,9 +1,23 @@
 import Color from "./Color"
-import kmeans from "./kmeans"
-import { log } from "./logMessage";
+import {log} from "./logMessage"
+import kmeans from "node-kmeans"
 
 const WHITE = new Color("white")
 const BLACK = new Color("black")
+
+const clusterize = (vectors, k) => new Promise((resolve, reject)=>{
+  kmeans.clusterize(
+    vectors,
+    {k, distance: Color.distance},
+    (err, res) => {
+      if (err) {
+        console.error(err)
+        reject(err)
+      }
+      resolve(res)
+    }
+  );
+})
 
 export default class Palette {
   constructor(colors) {
@@ -149,7 +163,7 @@ export default class Palette {
     return localMinima
   }
   createFinestSegmentation() {
-    const localMinima = this.findLocalMinima()
+    this.findLocalMinima();
   }
 
   async clustering(k = 5) {
@@ -166,16 +180,7 @@ export default class Palette {
         vectors[i] = Object.values(colors[i].lab)
       }
     }
-    let results
-    await kmeans.clusterize(
-      vectors,
-      { k, distance: Color.distance },
-      (err, res) => {
-        if (err) console.error(err)
-        else results = res
-      }
-    )
-    return results
+    return await clusterize(vectors, k)
   }
   async getNColors(n = 5) {
     const { colors } = this

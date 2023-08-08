@@ -1,6 +1,5 @@
-import colordiff from "color-diff"
+import * as colordiff from "color-diff"
 import tinycolor from "tinycolor2"
-import _ from "underscore"
 
 export default class Color extends tinycolor {
   constructor(input, weight = 0) {
@@ -15,7 +14,7 @@ export default class Color extends tinycolor {
     let makeItLight = toKeep.isDark()
     let newColor = toChange.lighten(50)
     while (!Color.isContrastOK(newColor, toKeep)) {
-      const con = newColor.contrast(toKeep)
+      newColor.contrast(toKeep);
       if (makeItLight) {
         newColor = newColor.brighten(STEP)
       } else {
@@ -57,7 +56,7 @@ export default class Color extends tinycolor {
       b
 
     x = 0.95047 * (x * x * x > 0.008856 ? x * x * x : (x - 16 / 116) / 7.787)
-    y = 1.0 * (y * y * y > 0.008856 ? y * y * y : (y - 16 / 116) / 7.787)
+    y = (y * y * y > 0.008856 ? y * y * y : (y - 16 / 116) / 7.787)
     z = 1.08883 * (z * z * z > 0.008856 ? z * z * z : (z - 16 / 116) / 7.787)
 
     r = x * 3.2406 + y * -1.5372 + z * -0.4986
@@ -75,8 +74,7 @@ export default class Color extends tinycolor {
     }
   }
   static mix(color1, color2) {
-    const n = new Color(tinycolor.mix(color1, color2).toRgb())
-    return n
+    return new Color(tinycolor.mix(color1, color2).toRgb())
   }
   get rgba() {
     const rgb = this.toRgb()

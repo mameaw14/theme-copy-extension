@@ -1,10 +1,8 @@
 import munkres from "munkres-js"
-import colordiff from "color-diff"
-import { log } from "./logMessage"
+import * as colordiff from "color-diff"
 
 function distance(a, b) {
-  const wDist = (a.weight - b.weight) ** 2
-  return wDist
+  return (a.weight - b.weight) ** 2
 }
 
 function mixDistance(a, b) {

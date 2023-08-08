@@ -1,4 +1,4 @@
 export function log(...message) {
-  chrome.runtime.sendMessage(message)
+  browser.runtime.sendMessage(message)
   return true
 }

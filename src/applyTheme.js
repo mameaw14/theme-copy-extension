@@ -1,10 +1,8 @@
-import munkres from "munkres-js"
-import colordiff from "color-diff"
 import traverse from "./traverse.js"
 import Palette from "./utils/Palette.js"
 import mappingPalette from "./utils/mapping.js"
 import Color from "./utils/Color.js"
-import { loadText, getRules } from "./utils/stylesheet.js"
+import { getRules } from "./utils/stylesheet.js"
 import { log } from "./utils/logMessage.js";
 const BORDER_PROPERTIES = [
   "borderLeftColor",
@@ -45,10 +43,8 @@ async function replaceRules(mapping) {
       }
     } catch (err) {
       console.error(err)
-      continue
     }
   }
-  return
 }
 
 async function addInlineCSS(
@@ -65,7 +61,7 @@ async function addInlineCSS(
       if (bgColor in mapping.bg) {
         addCssText(node, "background-color", mapping.bg[bgColor])
       }
-      if (new Color(bgColor).getAlpha() != 0) {
+      if (new Color(bgColor).getAlpha() !== 0) {
         nearlestBgColor = bgColor
       }
       let fg = new Color(color)
@@ -99,7 +95,7 @@ async function adjustTextContrast(
       let style = window.getComputedStyle(node)
       let color = style.getPropertyValue("color")
       let bgColor = style.getPropertyValue("background-color")
-      if ((new Color(bgColor).getAlpha() != 0)) {
+      if ((new Color(bgColor).getAlpha() !== 0)) {
         nearlestBgColor = bgColor
       }
       let fg = new Color(color)
